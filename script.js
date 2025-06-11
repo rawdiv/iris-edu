@@ -2,28 +2,102 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mobile menu toggle
     const hamburger = document.querySelector('.hamburger');
     const navLinks = document.querySelector('.nav-links');
-    const navLinksItems = document.querySelectorAll('.nav-links a');
+    const navLinksItems = document.querySelectorAll('.nav-links > a:not(.dropbtn)');
+    const dropBtns = document.querySelectorAll('.dropbtn');
+    const dropdowns = document.querySelectorAll('.dropdown');
+    const isMobile = window.innerWidth <= 768;
 
+    // Toggle mobile menu
     if (hamburger) {
         hamburger.addEventListener('click', function() {
             this.classList.toggle('active');
             navLinks.classList.toggle('active');
             document.body.classList.toggle('nav-open');
+            
+            // Close all dropdowns when menu is closed
+            if (!this.classList.contains('active')) {
+                closeAllDropdowns();
+            }
         });
     }
 
+    // Function to close all dropdowns
+    function closeAllDropdowns() {
+        dropdowns.forEach(dropdown => {
+            dropdown.classList.remove('active');
+            const content = dropdown.querySelector('.dropdown-content');
+            if (content) content.style.display = 'none';
+            const btn = dropdown.querySelector('.dropbtn');
+            if (btn) {
+                const icon = btn.querySelector('i');
+                if (icon) icon.style.transform = 'rotate(0)';
+            }
+        });
+    }
 
-    // Close mobile menu when clicking on a nav link
-    navLinksItems.forEach(link => {
-        link.addEventListener('click', () => {
-            if (hamburger.classList.contains('active')) {
-                hamburger.classList.remove('active');
-                navLinks.classList.remove('active');
-                document.body.classList.remove('nav-open');
+    // Toggle dropdown on mobile and desktop
+    dropBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            if (isMobile) {
+                e.preventDefault();
+                const dropdown = this.parentElement;
+                const isOpen = dropdown.classList.contains('active');
+                
+                // Close all other dropdowns
+                dropdowns.forEach(d => {
+                    if (d !== dropdown) {
+                        d.classList.remove('active');
+                        const content = d.querySelector('.dropdown-content');
+                        if (content) content.style.display = 'none';
+                        const icon = d.querySelector('i');
+                        if (icon) icon.style.transform = 'rotate(0)';
+                    }
+                });
+                
+                // Toggle current dropdown
+                dropdown.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.style.display = isOpen ? 'none' : 'block';
+                
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.style.transform = isOpen ? 'rotate(0)' : 'rotate(180deg)';
+                }
             }
         });
     });
 
+    // Handle window resize
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            const newIsMobile = window.innerWidth <= 768;
+            if (isMobile !== newIsMobile) {
+                // If breakpoint is crossed, reload the page to reinitialize the menu
+                window.location.reload();
+            }
+        }, 250);
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.matches('.dropbtn') && !e.target.closest('.dropdown')) {
+            closeAllDropdowns();
+        }
+    });
+
+    // Close mobile menu when clicking on a nav link
+    navLinksItems.forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (hamburger && hamburger.classList.contains('active')) {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+                document.body.classList.remove('nav-open');
+                closeAllDropdowns();
+            }
+        });
+    });
 
     // Sticky navbar on scroll
     const navbar = document.querySelector('.navbar');
